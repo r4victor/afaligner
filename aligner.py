@@ -9,7 +9,7 @@ from aeneas.textfile import TextFile, TextFileFormat
 from aeneas.exacttiming import TimeValue
 import numpy as np
 
-from alignment_algorithms import c_DTWBD
+from alignment_algorithms import c_DTWBD, FastDTWBD, c_FastDTWBD
 
 
 def align(audio_dir, text_dir, output_dir):
@@ -54,7 +54,7 @@ def create_map(text_paths, audio_paths, tmp_dir):
     If there is an extra content in the end of recorded sequence, align it with next text file.
     If none of the above, align next text and audio files.
     """
-    skip_penalty = 2.3
+    skip_penalty = 0.7
 
     synthesizer = Synthesizer()
     parse_parameters = {'is_text_unparsed_id_regex': 'f[0-9]+'}
@@ -107,11 +107,11 @@ def create_map(text_paths, audio_paths, tmp_dir):
             
             # Keep track to calculate frames timings
             audio_start_frame = 0
-            
+        
         n = len(text_mfcc_sequence)
         m = len(audio_mfcc_sequence)
-        
-        _, path = c_DTWBD(text_mfcc_sequence, audio_mfcc_sequence, skip_penalty)
+
+        _, path = c_FastDTWBD(text_mfcc_sequence, audio_mfcc_sequence, skip_penalty, radius=100)
         
         if len(path) == 0:
             # No matched frames,
@@ -196,3 +196,4 @@ if __name__ == '__main__':
     # show_mapping(align('resources/tests/text_audio_head/audio', 'resources/tests/text_audio_head/text', 'resources/tests/text_audio_head/'))
     # show_mapping(align('resources/tests/audio_head/audio', 'resources/tests/audio_head/text', 'resources/tests/audio_head/'))
     # show_mapping(align('resources/tests/3_to_3/audio', 'resources/tests/3_to_3/text', 'resources/tests/3_to_3/'))
+    show_mapping(align('resources/duty/audio', 'resources/duty/text', 'resources/duty/'))
