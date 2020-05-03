@@ -128,12 +128,11 @@ double *get_coarsed_sequence(double *s, size_t n, size_t l) {
 
 
 size_t *get_window(size_t n, size_t m, size_t *path_buffer, size_t path_len, int radius) {
-    if (path_len == 0) return NULL;
-
     size_t *window = malloc(2*n*sizeof(size_t));
+
     for (size_t i = 0; i < n; i++) {
-        window[2*i] = m;    // maximum value for lower bound
-        window[2*i+1] = 0;  // minimum value for upper bound
+        window[2*i] = m;    // maximum value for lower limit
+        window[2*i+1] = 0;  // minimum value for upper limit
     }
 
     for (size_t k = 0; k < path_len; k++) {
@@ -141,12 +140,13 @@ size_t *get_window(size_t n, size_t m, size_t *path_buffer, size_t path_len, int
         size_t j = path_buffer[2*k+1];
 
         for (ssize_t x = -radius; x < radius + 1; x++) {
-            for (ssize_t y = -radius; y < radius + 1; y++) {
-                update_window(window, n, m, 2*(i+x), 2*(j+y));
-                update_window(window, n, m, 2*(i+x)+1, 2*(j+y));
-                update_window(window, n, m, 2*(i+x), 2*(j+y)+1);
-                update_window(window, n, m, 2*(i+x)+1, 2*(j+y)+1);
-            }
+            // update lower window limit
+            update_window(window, n, m, 2*(i + x), 2*(j - radius));
+            update_window(window, n, m, 2*(i + x) + 1, 2*(j - radius));
+
+            // update upper window limit
+            update_window(window, n, m, 2*(i + x), 2*(j + radius + 1) + 1);
+            update_window(window, n, m, 2*(i + x) + 1, 2*(j + radius + 1) + 1);
         }
     }
 
@@ -155,8 +155,14 @@ size_t *get_window(size_t n, size_t m, size_t *path_buffer, size_t path_len, int
 
 
 void update_window(size_t *window, size_t n, size_t m, size_t i, size_t j) {
-    if (i < 0 || i >= n || j < 0 || j >= m) return;
+    if (i < 0 || i >= n) return;
 
+    if (j < 0) {
+        j = 0;
+    }
+    if (j > m - 1) {
+        j = m - 1;
+    }
     if (j < window[2*i]) {
         window[2*i] = j;
     }
