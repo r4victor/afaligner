@@ -1,12 +1,15 @@
+from datetime import timedelta
 import os.path
 import subprocess
 import time
+import logging
 
 from aeneas.audiofilemfcc import AudioFileMFCC
 from aeneas.language import Language
 from aeneas.synthesizer import Synthesizer
 from aeneas.textfile import TextFile, TextFileFormat
 from aeneas.exacttiming import TimeValue
+from aeneas.runtimeconfiguration import RuntimeConfiguration
 import numpy as np
 
 from alignment_algorithms import c_DTWBD, FastDTWBD, c_FastDTWBD
@@ -54,7 +57,7 @@ def create_map(text_paths, audio_paths, tmp_dir):
     If there is an extra content in the end of recorded sequence, align it with next text file.
     If none of the above, align next text and audio files.
     """
-    skip_penalty = 0.7
+    skip_penalty = 0.75
 
     synthesizer = Synthesizer()
     parse_parameters = {'is_text_unparsed_id_regex': 'f[0-9]+'}
@@ -111,13 +114,15 @@ def create_map(text_paths, audio_paths, tmp_dir):
         n = len(text_mfcc_sequence)
         m = len(audio_mfcc_sequence)
 
-        _, path = c_FastDTWBD(text_mfcc_sequence, audio_mfcc_sequence, skip_penalty, radius=100)
+        _, path = c_FastDTWBD(text_mfcc_sequence, audio_mfcc_sequence, skip_penalty, radius=200)
         
         if len(path) == 0:
-            # No matched frames,
-            # inappropriate skip_penalty or input,
-            # stop alignment
-            return text_to_audio_map
+            print(
+                f'No match between {text_name} and {audio_name}. '
+                f'Alignment is terminated. '
+                f'Adjust skip_penalty or input files.'
+            )
+            return {}
         
         # Project path to the text and audio sequences
         text_path_frames = path[:,0]
@@ -149,26 +154,29 @@ def create_map(text_paths, audio_paths, tmp_dir):
         fragment_map = {f: (audio_name, t) for f, t in zip(fragments_to_map, anchors_timings)}
         text_to_audio_map[text_name].update(fragment_map)
         
-        # Decide whether to process next file or to align tail of the current one
+        # Decide whether to process next file or to align the tail of the current one
 
         if map_anchors_to == len(anchors):
-            # No more text fragments to map since there is no fragments in the text tail
+            # Process next text if no fragments are left
             process_next_text = True
         else:
-            # Align tail of the current text
+            # Otherwise align tail of the current text
             process_next_text = False
             text_mfcc_sequence = text_mfcc_sequence[last_matched_text_frame:]
             fragments = fragments[map_anchors_to:]
             anchors = anchors[map_anchors_to:] - last_matched_text_frame
             
-        if last_matched_audio_frame == m - 1:
-            # No more audio to map since audio tail is not detected
+        if last_matched_audio_frame == m - 1 or not process_next_text:
+            # Process next audio if there are no unmatched audio frames in the tail
+            # or there are more text fragments to map, i.e.
+            # we choose to process next audio if we cannot decide.
+            # This strategy is correct if there are no extra fragments in the end.
             process_next_audio = True
         else:
-            # Align tail of the current audio
+            # Otherwise align tail of the current audio
             process_next_audio = False
             audio_mfcc_sequence = audio_mfcc_sequence[last_matched_audio_frame:]
-            audio_start_frame = last_matched_audio_frame
+            audio_start_frame += last_matched_audio_frame
     
     return text_to_audio_map
 
@@ -189,11 +197,14 @@ def show_mapping(text_to_audio_map):
     for text, fragment_map in text_to_audio_map.items():
         print(text)
         for fragment, val in fragment_map.items():
-            print(fragment, val)
+            print(fragment, f'{val[0]} {timedelta(seconds=int(val[1]))}')
 
 
 if __name__ == '__main__':
     # show_mapping(align('resources/tests/text_audio_head/audio', 'resources/tests/text_audio_head/text', 'resources/tests/text_audio_head/'))
     # show_mapping(align('resources/tests/audio_head/audio', 'resources/tests/audio_head/text', 'resources/tests/audio_head/'))
     # show_mapping(align('resources/tests/3_to_3/audio', 'resources/tests/3_to_3/text', 'resources/tests/3_to_3/'))
+    import time
+    n = time.time()
     show_mapping(align('resources/duty/audio', 'resources/duty/text', 'resources/duty/'))
+    print(time.time() - n)
