@@ -1,7 +1,11 @@
 from collections import defaultdict
 import ctypes
+import os.path
 
 import numpy as np
+
+
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 def DTWBD(s, t, skip_penalty, window=None):
@@ -85,9 +89,12 @@ def _coarse_seq(seq):
 def _get_window(path, radius, n, m):
     window = np.array([[m, 0] for _ in range(n)], dtype='uint64')
 
+    if len(path) == 0:
+        return window
+
     for i, j in path:
         for x in range(-radius, radius+1):
-            for y in range(-radius, radius+1):
+            for y in [-radius, radius+1]:
                 for cell_i, cell_j in _project_cell(i+x, j+y):
                     _update_window(window, n, m, cell_i, cell_j)
 
@@ -99,8 +106,11 @@ def _project_cell(i, j):
 
 
 def _update_window(window, n, m, i, j):
-    if i < 0 or i >= n or j < 0 or j >= m:
+    if i < 0 or i >= n:
         return
+
+    j = min(j, m-1)
+    j = max(j, 0)
 
     if j < window[i][0]:
         window[i][0] = j
@@ -112,7 +122,7 @@ def c_DTWBD(s, t, skip_penalty, window=None):
     """
     Wrapper for DTWDB C implementation.
     """
-    c_module = ctypes.cdll['c_modules/alignment_algorithms.so']
+    c_module = ctypes.cdll[os.path.join(BASE_DIR, 'c_modules/alignment_algorithms.so')]
     n, l = s.shape
     m, _ = t.shape
     path_distance = ctypes.c_double()
@@ -135,7 +145,7 @@ def c_FastDTWBD(s, t, skip_penalty, radius):
     """
     Wrapper for DTWDB C implementation.
     """
-    c_module = ctypes.cdll['c_modules/alignment_algorithms.so']
+    c_module = ctypes.cdll[os.path.join(BASE_DIR, 'c_modules/alignment_algorithms.so')]
     n, l = s.shape
     m, _ = t.shape
     path_distance = ctypes.c_double()

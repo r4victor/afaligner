@@ -4,6 +4,7 @@ import subprocess
 import time
 import logging
 import math
+import shutil
 
 from aeneas.audiofilemfcc import AudioFileMFCC
 from aeneas.language import Language
@@ -14,11 +15,14 @@ from aeneas.runtimeconfiguration import RuntimeConfiguration
 import numpy as np
 import jinja2
 
-from alignment_algorithms import c_DTWBD, FastDTWBD, c_FastDTWBD
+from .alignment_algorithms import c_DTWBD, FastDTWBD, c_FastDTWBD
+
+
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 def align(
-    audio_dir, text_dir, output_dir, output_format=None,
+    text_dir, audio_dir, output_dir, output_format=None,
     output_text_path_prefix='', output_audio_path_prefix=''
 ):
     tmp_dir = os.path.join(output_dir, 'tmp')
@@ -36,6 +40,8 @@ def align(
             output_smil(text_to_audio_map, output_dir)
         elif output_format == 'json':
             output_json(text_to_audio_map, output_dir)
+
+    shutil.rmtree(tmp_dir)
 
     return text_to_audio_map
 
@@ -88,7 +94,7 @@ def create_map(
                 break
 
             text_name = get_name_from_path(text_path)
-            output_text_name = os.path.join(output_audio_path_prefix, text_name)
+            output_text_name = os.path.join(output_text_path_prefix, text_name)
             textfile = TextFile(text_path, file_format=TextFileFormat.UNPARSED, parameters=parse_parameters)
             textfile.set_language(Language.ENG)
             text_wav_path = os.path.join(tmp_dir, f'{drop_extension(text_name)}_text.wav')
@@ -225,7 +231,7 @@ def time_to_str(t):
 
 def output_smil(text_to_audio_map, output_dir):
     env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader('templates/'),
+        loader=jinja2.FileSystemLoader(os.path.join(BASE_DIR, 'templates/')),
         autoescape=True
     )
     template = env.get_template('template.smil')
