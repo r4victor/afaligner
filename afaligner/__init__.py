@@ -1,10 +1,10 @@
 from datetime import timedelta, datetime
-import os.path
-import subprocess
-import time
+import json
 import logging
 import math
+import os.path
 import shutil
+import subprocess
 
 from aeneas.audiofilemfcc import AudioFileMFCC
 from aeneas.language import Language
@@ -22,50 +22,103 @@ BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 def align(
-    text_dir, audio_dir, output_dir, output_format=None,
-    output_text_path_prefix='', output_audio_path_prefix=''
+    text_dir, audio_dir, output_dir=None, output_format='smil',
+    sync_map_text_path_prefix='', sync_map_audio_path_prefix='',
+    skip_penalty=0.75, radius=100
 ):
-    tmp_dir = os.path.join(output_dir, 'tmp')
+    """
+    This function performs an automatic synchronization of text and audio.
+    It takes a list of text files and a list of audio files with the same text narrated
+    and returns a mapping from the text fragments (paragraph, sentence, word)
+    to the their corresponding places in the audio (begin_time, end_time).
+    For alignment details see build_sync_map function.
+    
+    Input:
+
+    `text_dir` – directory containing a list of .xhtml files,
+    each consisting of text fragments – elements with id='f[0-9]+'.
+
+    `audio_dir` – directory containing a list of audio files.
+
+    `output_dir` – directory to write a sync map to.
+
+    `output_format` – file format of a sync map output.
+    'smil' and 'json' are supported. Defaults to 'smil'
+
+    `sync_map_text_path_prefix` – by default sync map includes only
+    file names. This path prefix can be used to construct a desired path, e.g.
+    'text_file': 'text.xhtml', `sync_map_text_path_prefix`='../text/' =>
+    'text_file': '../text/text.xhtml'.
+
+    `sync_map_audio_path_prefix` – same for audio files.
+
+    Output:
+
+    Returns a sync map of the form: {
+        'text.xhtml': {
+            'f0001': {
+                'audio_file': 'audio.mp3',
+                'begin_time': '0:00:02.600',
+                'end_time': '0:00:05.880'
+            }, ...
+        }, ...
+    }
+
+    If `output_dir` is not None, outputs sync map formatted according to `output_format`.
+    
+
+    """
+    if output_dir is not None:
+        tmp_dir = os.path.join(output_dir, 'tmp')
+    else:
+        parent_dir = os.path.dirname(os.path.dirname(os.path.join(text_dir, '')))
+        tmp_dir = os.path.join(parent_dir, 'tmp')
+
     os.makedirs(tmp_dir, exist_ok=True)
     
     text_paths = (os.path.join(text_dir, f) for f in sorted(os.listdir(text_dir)))
     audio_paths = (os.path.join(audio_dir, f) for f in sorted(os.listdir(audio_dir)))
 
-    text_to_audio_map = create_map(
-        text_paths, audio_paths, tmp_dir, output_text_path_prefix, output_audio_path_prefix
+    sync_map = build_sync_map(
+        text_paths, audio_paths, tmp_dir,
+        sync_map_text_path_prefix=sync_map_text_path_prefix,
+        sync_map_audio_path_prefix=sync_map_audio_path_prefix,
+        skip_penalty=skip_penalty,
+        radius=radius
     )
 
-    if output_format is not None:
+    if output_dir is not None:
         if output_format == 'smil':
-            output_smil(text_to_audio_map, output_dir)
+            output_smil(sync_map, output_dir)
         elif output_format == 'json':
-            output_json(text_to_audio_map, output_dir)
+            output_json(sync_map, output_dir)
 
     shutil.rmtree(tmp_dir)
 
-    return text_to_audio_map
+    return sync_map
 
 
-def create_map(
+def build_sync_map(
     text_paths, audio_paths, tmp_dir,
-    output_text_path_prefix, output_audio_path_prefix
+    sync_map_text_path_prefix, sync_map_audio_path_prefix,
+    skip_penalty, radius
 ):
     """
-    This function builds a mapping between a series of text files and a series of audio files
-    representing the same work. Mapping is built by synthesizing text and then aligning it with the recorded audio.
+    This is an algorithm for building a sync map.
+    It synthesizes text and then aligns synthesized audio with the recorded audio
+    using a variation of the DTW (Dynamic Time Warping) algorithm.
     
-    The main features of this algorithm is that:
+    The main features of this algorithm are:
     1) It can handle structural differences in the beginning and in the end of files.
     2) It does not require one-to-one correspondance between text and audio files (i.e. the splitting can be done differently).
     
     Alignment details:
     Synthesized and recorded audio are represented as sequences of MFCC frames.
-    These sequences are aligned using variation of DTW algorithm.
+    These sequences are aligned using variation of the DTW algorithm.
     In contrast to the classic DTW, this algorithms can be used
     to align sequences with structural differences in the beginning or in the end.
-    This is done by mapping frames of extra content to the single (first or last) frame of the opposite sequence.
     
-    Steps to build a mapping:
+    Steps to build a sync map:
     1) Synthesize text file and produce a list of anchors.
     Each anchor represents the start of the corresponding text fragment in a synthesized audio.
     2) Get sequences of MFCC frames of synthesized and recorded audio.
@@ -77,12 +130,11 @@ def create_map(
     If there is an extra content in the end of recorded sequence, align it with next text file.
     If none of the above, align next text and audio files.
     """
-    skip_penalty = 0.75
 
     synthesizer = Synthesizer()
     parse_parameters = {'is_text_unparsed_id_regex': 'f[0-9]+'}
     
-    text_to_audio_map = {}
+    sync_map = {}
     process_next_text = True
     process_next_audio = True
 
@@ -94,11 +146,11 @@ def create_map(
                 break
 
             text_name = get_name_from_path(text_path)
-            output_text_name = os.path.join(output_text_path_prefix, text_name)
+            output_text_name = os.path.join(sync_map_text_path_prefix, text_name)
             textfile = TextFile(text_path, file_format=TextFileFormat.UNPARSED, parameters=parse_parameters)
             textfile.set_language(Language.ENG)
             text_wav_path = os.path.join(tmp_dir, f'{drop_extension(text_name)}_text.wav')
-            text_to_audio_map[output_text_name] = {}
+            sync_map[output_text_name] = {}
 
             # Produce synthesized audio, get anchors
             anchors,_,_ = synthesizer.synthesize(textfile, text_wav_path)
@@ -122,7 +174,7 @@ def create_map(
                 break
 
             audio_name = get_name_from_path(audio_path)
-            output_audio_name = os.path.join(output_audio_path_prefix, audio_name)
+            output_audio_name = os.path.join(sync_map_audio_path_prefix, audio_name)
             audio_wav_path = os.path.join(tmp_dir, f'{drop_extension(audio_name)}_audio.wav')
             subprocess.run(['ffmpeg', '-n', '-i', audio_path, audio_wav_path])
 
@@ -136,7 +188,7 @@ def create_map(
         n = len(text_mfcc_sequence)
         m = len(audio_mfcc_sequence)
 
-        _, path = c_FastDTWBD(text_mfcc_sequence, audio_mfcc_sequence, skip_penalty, radius=200)
+        _, path = c_FastDTWBD(text_mfcc_sequence, audio_mfcc_sequence, skip_penalty, radius=radius)
         
         if len(path) == 0:
             print(
@@ -175,7 +227,6 @@ def create_map(
         # Map fragment_ids to timings, update mapping of the current text file
         fragment_map = {
             f: {
-                'text_file': output_text_name,
                 'audio_file': output_audio_name,
                 'begin_time': time_to_str(bt),
                 'end_time': time_to_str(et)
@@ -183,7 +234,7 @@ def create_map(
             for f, bt, et in zip(fragments_to_map, timings[:-1], timings[1:])
         }
 
-        text_to_audio_map[output_text_name].update(fragment_map)
+        sync_map[output_text_name].update(fragment_map)
         
         # Decide whether to process next file or to align the tail of the current one
 
@@ -209,7 +260,7 @@ def create_map(
             audio_mfcc_sequence = audio_mfcc_sequence[last_matched_audio_frame:]
             audio_start_frame += last_matched_audio_frame
     
-    return text_to_audio_map
+    return sync_map
 
 
 def get_name_from_path(path):
@@ -229,14 +280,14 @@ def time_to_str(t):
     return f'{hours:d}:{minutes:0>2d}:{seconds:0>2d}.{ms:0>3d}'
 
 
-def output_smil(text_to_audio_map, output_dir):
+def output_smil(sync_map, output_dir):
     env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(os.path.join(BASE_DIR, 'templates/')),
         autoescape=True
     )
     template = env.get_template('template.smil')
 
-    for text_path, fragments in text_to_audio_map.items():
+    for text_path, fragments in sync_map.items():
         parallels = []
         n = get_number_of_digits_to_name(len(fragments))
         for i, t in enumerate(fragments.items(), start=1):
@@ -265,32 +316,16 @@ def get_number_of_digits_to_name(num):
     return math.floor(math.log10(num)) + 1
 
 
-def output_json(text_to_audio_map, output_dir):
-    for text_name, fragments in text_to_audio_map.items():
+def output_json(sync_map, output_dir):
+    for text_path, fragments in sync_map.items():
+        text_name = get_name_from_path(text_path)
         file_path = os.path.join(output_dir, f'{drop_extension(text_name)}.json')
         with open(file_path, 'w') as f:
             json.dump(fragments, f, indent=2)
 
 
-def show_mapping(text_to_audio_map):
-    for text, fragment_map in text_to_audio_map.items():
+def print_sync_map(sync_map):
+    for text, fragment_map in sync_map.items():
         print(text)
-        for fragment, val in fragment_map.items():
-            print(fragment, f'{val[0]} {timedelta(seconds=int(val[1]))}')
-
-
-if __name__ == '__main__':
-    # show_mapping(align('resources/tests/text_audio_head/audio', 'resources/tests/text_audio_head/text', 'resources/tests/text_audio_head/'))
-    # show_mapping(align('resources/tests/audio_head/audio', 'resources/tests/audio_head/text', 'resources/tests/audio_head/'))
-    # show_mapping(align('resources/tests/3_to_3/audio', 'resources/tests/3_to_3/text', 'resources/tests/3_to_3/'))
-    import time
-    import json
-    n = time.time()
-    align(
-        'resources/tests/3_to_3/audio', 'resources/tests/3_to_3/text', 'resources/tests/3_to_3/smil',
-        output_format='smil',
-        output_text_path_prefix='../text/',
-        output_audio_path_prefix='../audio/')
-    # text_to_audio_map = align('resources/duty/audio', 'resources/duty/text', 'resources/duty/')
-    # text_to_audio_map = align('resources/essays/audio', 'resources/essays/text', 'resources/essays/')
-    print(time.time() - n)
+        for fragment, info in fragment_map.items():
+            print(fragment, info['audio_file'], info['begin_time'], info['end_time'])
