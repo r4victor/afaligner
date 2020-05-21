@@ -37,7 +37,7 @@ $ git clone https://github.com/r4victor/afaligner/ && cd afaligner
 ```
 5. Create source distribution and install <b>afaligner</b>:
 ```
-$ python setup.py sdist && pip install dist/afaligner*
+$ python setup.py sdist && pip install dist/afaligner*.tar.gz
 ```
 or, if you want to modify <b>afaligner</b>'s code, install in editable mode:
 ```

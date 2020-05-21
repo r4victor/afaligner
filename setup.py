@@ -35,6 +35,7 @@ setup(
     author_email='vds003@gmail.com',
     license='MIT',
     packages=['afaligner'],
+    package_data={'afaligner': ['templates/*']},
     install_requires=[
         'numpy==1.18.4', 'aeneas==1.7.3.0', 'Jinja2==2.11.1',
     ],
