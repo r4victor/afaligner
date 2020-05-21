@@ -15,7 +15,7 @@ from aeneas.runtimeconfiguration import RuntimeConfiguration
 import numpy as np
 import jinja2
 
-from .alignment_algorithms import c_DTWBD, FastDTWBD, c_FastDTWBD
+from .alignment_algorithms import c_FastDTWBD
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 def align(
     text_dir, audio_dir, output_dir=None, output_format='smil',
     sync_map_text_path_prefix='', sync_map_audio_path_prefix='',
-    skip_penalty=0.75, radius=100
+    skip_penalty=None, radius=None
 ):
     """
     This function performs an automatic synchronization of text and audio.
@@ -65,9 +65,14 @@ def align(
     }
 
     If `output_dir` is not None, outputs sync map formatted according to `output_format`.
-    
 
     """
+    if skip_penalty is None:
+        skip_penalty = 0.75
+
+    if radius is None:
+        radius = 100
+
     if output_dir is not None:
         tmp_dir = os.path.join(output_dir, 'tmp')
     else:
@@ -110,8 +115,13 @@ def build_sync_map(
     
     The main features of this algorithm are:
     1) It can handle structural differences in the beginning and in the end of files.
-    2) It does not require one-to-one correspondance between text and audio files (i.e. the splitting can be done differently).
-    
+    2) It finds an approximation to an optimal warping path in linear time and space using FastDTW approach.
+
+    Note that while the algorithm does not require one-to-one correspondance
+    between text and audio files (i.e. the splitting can be done differently),
+    the quality of the result is sensitive to the choice of skip_penalty and radius parameters,
+    so it is recommended to have such a correspondance.
+
     Alignment details:
     Synthesized and recorded audio are represented as sequences of MFCC frames.
     These sequences are aligned using variation of the DTW algorithm.
@@ -126,8 +136,9 @@ def build_sync_map(
     4) Check whether the extra content is found, calculate mapping boundaries.
     5) Map anchors inside the boundaries to the recorded MFCC sequence using warping path from step 3.
     6) Start all over again considering:
-    If there is an extra content in the end of synthesized sequence, align it with next audio file.
-    If there is an extra content in the end of recorded sequence, align it with next text file.
+    If there is an extra content in the end of synthesized sequence, align it with the next audio file.
+    If there is an extra content in the end of recorded sequence, align it with the next text file.
+    If both sequences have extra content in the end, align text tail with the next audio file.
     If none of the above, align next text and audio files.
     """
 
@@ -313,6 +324,9 @@ def output_smil(sync_map, output_dir):
 
 
 def get_number_of_digits_to_name(num):
+    if num <= 0:
+        return 0
+
     return math.floor(math.log10(num)) + 1
 
 

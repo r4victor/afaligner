@@ -41,6 +41,13 @@ size_t *get_window(size_t n, size_t m, size_t *path_buffer, size_t path_len, int
 void update_window(size_t *window, size_t n, size_t m, size_t i, size_t j);
 
 
+// This is a DTWDB (dynamic time warping with boundaries detection) algorithm,
+// a variation of a classic DTW algorithm, that
+// chooses the best possible start and the end of the warping path.
+// In contrast, DTW always matches the entire sequences.
+// The algorithm is able to skip the first and the last few frames of both sequences
+// with the cost of `skip_penalty` for each skipped frame.
+// 
 // Returns warping path length.
 // Writes warping path distance to the `path_distance`.
 // Writes warping path to the `path_buffer`.
@@ -172,6 +179,13 @@ void update_window(size_t *window, size_t n, size_t m, size_t i, size_t j) {
 }
 
 
+// This is a DTWDB (dynamic time warping with boundaries detection) algorithm,
+// a variation of a classic DTW algorithm, that
+// chooses the best possible start and the end of the warping path.
+// In contrast, DTW always matches the entire sequences.
+// The algorithm is able to skip the first and the last few frames of both sequences
+// with the cost of `skip_penalty` for each skipped frame.
+// 
 // Returns warping path length.
 // Writes warping path distance to the `path_distance`.
 // Writes warping path to the `path_buffer`.

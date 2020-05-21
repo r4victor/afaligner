@@ -11,7 +11,7 @@ BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 def DTWBD(s, t, skip_penalty, window=None):
     """
     This is a DTWDB (dynamic time warping with boundaries detection) algorithm,
-    a variation of a classic DTW algorithm that
+    a variation of a classic DTW algorithm, that
     chooses the best possible start and the end of the warping path.
     In contrast, DTW always matches the entire sequences.
     The algorithm is able to skip the first and the last few frames of both sequences
@@ -143,7 +143,7 @@ def c_DTWBD(s, t, skip_penalty, window=None):
 
 def c_FastDTWBD(s, t, skip_penalty, radius):
     """
-    Wrapper for DTWDB C implementation.
+    Wrapper for FastDTWDB C implementation.
     """
     c_module = ctypes.cdll[os.path.join(BASE_DIR, 'c_modules/alignment_algorithms.so')]
     n, l = s.shape

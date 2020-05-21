@@ -1,8 +1,8 @@
 <smil xmlns="http://www.w3.org/ns/SMIL" xmlns:epub="http://www.idpf.org/2007/ops" version="3.0">
   <body>
-    {% for seq in sequentials -%}
+    {%- for seq in sequentials %}
     <seq id="{{ seq.id }}" epub:textref="{{ seq.text_path }}">
-      {% for pair in seq.parallels -%}
+      {%- for pair in seq.parallels %}
       <par id="{{ pair.id }}">
         <text src="{{ seq.text_path }}#{{ pair.fragment_id }}"/>
         <audio src="{{ pair.audio_path }}" clipBegin="{{ pair.begin_time }}" clipEnd="{{ pair.end_time }}"/>
