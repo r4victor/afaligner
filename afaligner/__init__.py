@@ -15,7 +15,7 @@ from aeneas.runtimeconfiguration import RuntimeConfiguration
 import numpy as np
 import jinja2
 
-from .alignment_algorithms import c_FastDTWBD
+from afaligner.c_dtwbd_wrapper import c_FastDTWBD
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
