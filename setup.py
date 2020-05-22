@@ -40,8 +40,8 @@ setup(
         'numpy==1.18.4', 'aeneas==1.7.3.0', 'Jinja2==2.11.1',
     ],
     ext_modules=[CTypes(
-        'afaligner.c_modules.alignment_algorithms',
-        sources=['afaligner/c_modules/alignment_algorithms.c']
+        'afaligner.c_modules.dtwbd',
+        sources=['afaligner/c_modules/dtwbd.c']
     )],
     cmdclass={'build_ext': build_ext}
 )
