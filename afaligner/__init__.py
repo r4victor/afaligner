@@ -303,13 +303,15 @@ def output_smil(sync_map, output_dir):
         n = get_number_of_digits_to_name(len(fragments))
         for i, t in enumerate(fragments.items(), start=1):
             fragment_id, info = t
-            parallels.append({
-                'id': f'par{i:0>{n}}',
-                'fragment_id': fragment_id,
-                'audio_path': info['audio_file'],
-                'begin_time': info['begin_time'],
-                'end_time': info['end_time'],
-            })
+            # EPUB3 standard requires clipBegin < clipEnd
+            if info['begin_time'] != info['end_time']:
+                parallels.append({
+                    'id': f'par{i:0>{n}}',
+                    'fragment_id': fragment_id,
+                    'audio_path': info['audio_file'],
+                    'begin_time': info['begin_time'],
+                    'end_time': info['end_time'],
+                })
 
         smil = template.render(sequentials=[{
             'id': 'seq1',
