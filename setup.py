@@ -1,5 +1,10 @@
+import os.path
+
 from setuptools import setup, Extension
 from distutils.command.build_ext import build_ext as _build_ext
+
+
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 class CTypes(Extension): pass
@@ -26,14 +31,29 @@ class build_ext(_build_ext):
         return super().get_ext_filename(ext_name)
 
 
+with open(os.path.join(BASE_DIR, 'README.md'), 'r') as f:
+    long_description = f.read()
+
+
 setup(
     name='afaligner',
-    version='0.0.1',
-    description='A forced aligner intended for synchronization of narrated text',
+    version='0.1.0',
     url='https://github.com/r4victor/afaligner',
     author='Victor Skvortsov',
     author_email='vds003@gmail.com',
+    description='A forced aligner intended for synchronization of narrated text',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     license='MIT',
+    classifiers=[
+        'Topic :: Multimedia :: Sound/Audio :: Speech',
+        'Development Status :: 3 - Alpha',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: C',
+        'Operating System :: OS Independent',
+        'License :: OSI Approved :: MIT License',
+    ],
+    keywords=['forced-alignment'],
     packages=['afaligner'],
     package_data={'afaligner': ['templates/*']},
     install_requires=[
