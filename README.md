@@ -4,7 +4,7 @@
 
 <b>afaligner</b> is a Python library for automatic text and audio synchronization. It's a forced aligner that works by synthesizing text and then aligning synthesized and recorded audio using a variation of [DTW](https://en.wikipedia.org/wiki/Dynamic_time_warping) (Dynamic Time Warping) algorithm.
 
-<b>afaligner</b> is used in [syncabook](https://github.com/r4victor/syncabook) tool for synchronization of narrated audio with text – to produce EPUB3 with Media Overlays ebooks – and has been developed for this specific purpose. If you want to create an ebook with synchronized text and audio, please refer to [syncabook](https://github.com/r4victor/syncabook).
+<b>afaligner</b> is used in a [syncabook](https://github.com/r4victor/syncabook) tool for synchronization of narrated audio with text – to produce EPUB3 with Media Overlays ebooks – and has been developed for this specific purpose. If you want to create an ebook with synchronized text and audio, please refer to [syncabook](https://github.com/r4victor/syncabook).
 
 The main features of the alignment algorithm behind <b>afaligner</b> are:
 
@@ -50,12 +50,25 @@ $ git clone https://github.com/r4victor/afaligner/ && cd afaligner
 $ pip install -e .
 ```
 
+## Running tests
+
+1. Install `pytest`:
+
+```
+$ pip install pytest
+```
+
+2. Run pytest:
+
+```
+$ python -m pytest tests/
+```
 
 ## Usage
 
 <b>afaligner</b> is designed to be used as a library. If you want to produce an ebook with synchronized text and audio or just to perform a synchronization, you may want to take a look at a command line tool called [syncabook](https://github.com/r4victor/syncabook).
 
-<b>afaligner</b> provides only one function called `align` which takes text directory, audio directory and a set of output parameters and returns sync map (a mapping from text fragments to their time positions in audio files) and, if requested, writes the result to disk. The call may look like this:
+<b>afaligner</b> provides only one function called `align` which takes a text directory, an audio directory and a set of output parameters and returns a sync map (a mapping from text fragments to their time positions in audio files) and, if requested, writes the result to disk. The call may look like this:
 
 ```python
 from afaligner import align
