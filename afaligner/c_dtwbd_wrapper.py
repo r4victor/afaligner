@@ -15,7 +15,7 @@ def c_FastDTWBD(s, t, skip_penalty, radius):
     n, l = s.shape
     m, _ = t.shape
     path_distance = ctypes.c_double()
-    path_buffer = np.empty((n+m, 2), dtype='int64')
+    path_buffer = np.empty((n+m, 2), dtype='uintp')
     path_len = c_module.FastDTWBD(
         s.ctypes,
         t.ctypes,
