@@ -58,7 +58,7 @@ $ pip install -e .
 $ pip install pytest
 ```
 
-2. Run pytest:
+2. Run tests:
 
 ```
 $ python -m pytest tests/
