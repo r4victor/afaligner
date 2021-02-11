@@ -23,8 +23,8 @@ def c_FastDTWBD(s, t, skip_penalty, radius):
         ctypes.c_size_t(n),
         ctypes.c_size_t(m),
         ctypes.c_size_t(l),
-        radius,
         ctypes.c_double(skip_penalty),
+        radius,
         ctypes.byref(path_distance),
         path_buffer.ctypes.data_as(ctypes.POINTER(ctypes.c_size_t))
     )
