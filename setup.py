@@ -37,7 +37,7 @@ with open(os.path.join(BASE_DIR, 'README.md'), 'r') as f:
 
 setup(
     name='afaligner',
-    version='0.1.2',
+    version='0.1.3',
     url='https://github.com/r4victor/afaligner',
     author='Victor Skvortsov',
     author_email='vds003@gmail.com',
