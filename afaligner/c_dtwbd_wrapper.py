@@ -16,15 +16,16 @@ def c_FastDTWBD(s, t, skip_penalty, radius):
     m, _ = t.shape
     path_distance = ctypes.c_double()
     path_buffer = np.empty((n+m, 2), dtype='uintp')
+    c_module.FastDTWBD.restype = ctypes.c_size_t
     path_len = c_module.FastDTWBD(
-        s.ctypes,
-        t.ctypes,
+        s.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        t.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         ctypes.c_size_t(n),
         ctypes.c_size_t(m),
         ctypes.c_size_t(l),
         radius,
         ctypes.c_double(skip_penalty),
         ctypes.byref(path_distance),
-        path_buffer.ctypes
+        path_buffer.ctypes.data_as(ctypes.POINTER(ctypes.c_size_t))
     )
     return path_distance.value, path_buffer[:path_len]
