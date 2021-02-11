@@ -5,6 +5,15 @@
 #include <stdio.h>
 
 
+#if defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+
+__declspec(dllimport) size_t FastDTWBD();
+__declspec(dllimport) size_t DTWBD();
+#endif
+
+
 typedef struct {
     double distance;
     ssize_t prev_i;
