@@ -16,6 +16,10 @@ The main features of the alignment algorithm behind <b>afaligner</b> are:
 
 <b>afaligner</b> was inspired by [aeneas](https://github.com/readbeyond/aeneas) and works in a similiar way. It uses <b>aeneas</b> as a dependency for text synthesis and MFCC extraction.
 
+## Supported platforms
+
+<b>afaligner</b> works on 64-bit Mac OS and Linux. Windows is not currently supported.
+
 ## Requirements
 
 * Python (>= 3.6)
