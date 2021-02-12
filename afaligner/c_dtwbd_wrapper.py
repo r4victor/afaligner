@@ -4,6 +4,10 @@ import os.path
 import numpy as np
 
 
+class FastDTWBDError(Exception):
+    pass
+
+
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -23,7 +27,7 @@ def c_FastDTWBD(s, t, skip_penalty, radius):
         ctypes.POINTER(ctypes.c_double),
         ctypes.POINTER(ctypes.c_size_t),
     )
-    c_module.FastDTWBD.restype = ctypes.c_size_t
+    c_module.FastDTWBD.restype = ctypes.c_ssize_t
     
     n, l = s.shape
     m, _ = t.shape
@@ -40,4 +44,11 @@ def c_FastDTWBD(s, t, skip_penalty, radius):
         ctypes.byref(path_distance),
         path_buffer.ctypes.data_as(ctypes.POINTER(ctypes.c_size_t))
     )
+
+    if path_len < 0:
+        raise FastDTWBDError(
+            'The FastDTWDB() C function raised an error. '
+            'See stderr for more details.'
+        )
+
     return path_distance.value, path_buffer[:path_len]
