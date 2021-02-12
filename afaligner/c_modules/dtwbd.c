@@ -23,12 +23,12 @@ typedef struct {
 
 // This is a fast version of DTWBD algorithm that finds an approximate warping path.
 // 
-// Returns warping path length.
+// Returns warping path length. Negative return value indicates an error.
 // Writes warping path distance to the `path_distance`.
 // Writes warping path to the `path_buffer`.
 // 
 // Linear both in time and space.
-size_t FastDTWBD(
+ssize_t FastDTWBD(
     double *s,  // first sequence of MFCC frames – n x l contiguous array
     double *t,  // second sequence of MFCC frames – m x l contiguous array
     size_t n,   // number of frames in first sequence
@@ -57,10 +57,10 @@ void update_window(size_t *window, size_t n, size_t m, ssize_t i, ssize_t j);
 // The algorithm is able to skip the first and the last few frames of both sequences
 // with the cost of `skip_penalty` for each skipped frame.
 // 
-// Returns warping path length.
+// Returns warping path length. Negative return value indicates an error.
 // Writes warping path distance to the `path_distance`.
 // Writes warping path to the `path_buffer`.
-size_t DTWBD(
+ssize_t DTWBD(
     double *s,  // first sequence of MFCC frames – n x l contiguous array
     double *t,  // second sequence of MFCC frames – m x l contiguous array
     size_t n,   // number of frames in first sequence
@@ -83,17 +83,17 @@ double get_distance(D_matrix_element *D_matrix, size_t n, size_t m, size_t *wind
 D_matrix_element get_best_candidate(D_matrix_element *candidates, size_t n);
 
 
-void reverse_path(size_t *path, size_t path_len);
+void reverse_path(size_t *path, ssize_t path_len);
 
 
 // This is a fast version of DTWBD algorithm that finds an approximate warping path.
 // 
-// Returns warping path length.
+// Returns warping path length. Negative return value indicates an error.
 // Writes warping path distance to the `path_distance`.
 // Writes warping path to the `path_buffer`.
 // 
 // Linear both in time and space.
-size_t FastDTWBD(
+ssize_t FastDTWBD(
     double *s,  // first sequence of MFCC frames – n x l contiguous array
     double *t,  // second sequence of MFCC frames – m x l contiguous array
     size_t n,   // number of frames in first sequence
@@ -104,8 +104,7 @@ size_t FastDTWBD(
     double *path_distance,  // place to store warping path distance
     size_t *path_buffer     // buffer to store resulting warping path – (n+m) x 2 contiguous array
 ) {
-    size_t path_len;
-
+    ssize_t path_len;
     size_t min_sequence_len = 2 * (radius + 1) + 1;
 
     if (n < min_sequence_len || m < min_sequence_len) {
@@ -195,10 +194,10 @@ void update_window(size_t *window, size_t n, size_t m, ssize_t i, ssize_t j) {
 // The algorithm is able to skip the first and the last few frames of both sequences
 // with the cost of `skip_penalty` for each skipped frame.
 // 
-// Returns warping path length.
+// Returns warping path length. Negative return value indicates an error.
 // Writes warping path distance to the `path_distance`.
 // Writes warping path to the `path_buffer`.
-size_t DTWBD(
+ssize_t DTWBD(
     double *s,  // first sequence of MFCC frames – n x l contiguous array
     double *t,  // second sequence of MFCC frames – m x l contiguous array
     size_t n,   // number of frames in first sequence
@@ -211,6 +210,12 @@ size_t DTWBD(
     size_t *path_buffer     // buffer to store resulting warping path – (n+m) x 2 contiguous array
 ) {
     D_matrix_element *D_matrix = malloc(sizeof(D_matrix_element) * n * m);
+
+    if (D_matrix == NULL) {
+        fprintf(stderr, "ERROR: malloc() failed when allocating D_matrix\n");
+        return -1;
+    }
+
     double min_path_distance;
     double cur_path_distance;
     size_t end_i, end_j;
@@ -244,7 +249,7 @@ size_t DTWBD(
         }
     }
 
-    size_t path_len = 0;
+    ssize_t path_len = 0;
 
     if (match) {
         D_matrix_element *e;
@@ -305,7 +310,7 @@ D_matrix_element get_best_candidate(D_matrix_element *candidates, size_t n) {
 }
 
 
-void reverse_path(size_t *path, size_t path_len) {
+void reverse_path(size_t *path, ssize_t path_len) {
     for (size_t i = 0, j = path_len - 1; i < j; i++, j--) {
         size_t tmp_s = path[2*i];
         size_t tmp_t = path[2*i+1];
