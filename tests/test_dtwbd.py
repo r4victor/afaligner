@@ -40,3 +40,9 @@ def test_perfect_match_in_the_middle():
     assert len(path) == len(s)
     np.testing.assert_equal(path[:,0], np.arange(60))
     np.testing.assert_equal(path[:,1], np.arange(20, 80))
+
+
+def test_allocate_large_matrix():
+    s = np.arange(100000, dtype='float64').reshape(-1,1)
+    t = np.arange(100000, dtype='float64').reshape(-1,1)
+    c_FastDTWBD(s, t, skip_penalty=0.5, radius=100)
