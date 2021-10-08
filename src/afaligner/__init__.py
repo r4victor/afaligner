@@ -1,6 +1,5 @@
-from datetime import timedelta, datetime
+from datetime import timedelta
 import json
-import logging
 import math
 import os.path
 import shutil
@@ -11,7 +10,6 @@ from aeneas.language import Language
 from aeneas.synthesizer import Synthesizer
 from aeneas.textfile import TextFile, TextFileFormat
 from aeneas.exacttiming import TimeValue
-from aeneas.runtimeconfiguration import RuntimeConfiguration
 import numpy as np
 import jinja2
 
@@ -24,7 +22,8 @@ BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 def align(
     text_dir, audio_dir, output_dir=None, output_format='smil',
     sync_map_text_path_prefix='', sync_map_audio_path_prefix='',
-    skip_penalty=None, radius=None
+    skip_penalty=None, radius=None,
+    times_as_timedelta=False,
 ):
     """
     This function performs an automatic synchronization of text and audio.
@@ -51,6 +50,10 @@ def align(
     'text_file': '../text/text.xhtml'.
 
     `sync_map_audio_path_prefix` – same for audio files.
+
+    `times_as_timedelta` – if True, returned times are datetime.timedelta() instances.
+    If False, the times are strings of the format
+    f'{hours:d}:{minutes:0>2d}:{seconds:0>2d}.{ms:0>3d}'
 
     Output:
 
@@ -89,7 +92,8 @@ def align(
         sync_map_text_path_prefix=sync_map_text_path_prefix,
         sync_map_audio_path_prefix=sync_map_audio_path_prefix,
         skip_penalty=skip_penalty,
-        radius=radius
+        radius=radius,
+        times_as_timedelta=times_as_timedelta
     )
 
     if output_dir is not None:
@@ -106,7 +110,8 @@ def align(
 def build_sync_map(
     text_paths, audio_paths, tmp_dir,
     sync_map_text_path_prefix, sync_map_audio_path_prefix,
-    skip_penalty, radius
+    skip_penalty, radius,
+    times_as_timedelta
 ):
     """
     This is an algorithm for building a sync map.
@@ -239,8 +244,8 @@ def build_sync_map(
         fragment_map = {
             f: {
                 'audio_file': output_audio_name,
-                'begin_time': time_to_str(bt),
-                'end_time': time_to_str(et)
+                'begin_time': format_time(bt, times_as_timedelta),
+                'end_time': format_time(et, times_as_timedelta),
             }
             for f, bt, et in zip(fragments_to_map, timings[:-1], timings[1:])
         }
@@ -282,8 +287,14 @@ def drop_extension(path):
     return os.path.splitext(path)[0]
 
 
-def time_to_str(t):
+def format_time(t, as_timedelta=False):
     tdelta = timedelta(seconds=t)
+    if as_timedelta:
+        return tdelta
+    return timedelta_to_str(tdelta)
+
+
+def timedelta_to_str(tdelta):
     hours = int(tdelta.total_seconds()) // 3600
     minutes = int(tdelta.total_seconds() % 3600) // 60
     seconds = int(tdelta.total_seconds()) % 60
