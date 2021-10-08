@@ -5,6 +5,9 @@
 
 **/__pycache__/
 *.py[co]
+*.egg-info
+
+*.so
 
 # project specific
 /resources

@@ -58,7 +58,8 @@ setup(
     package_dir={'': 'src'},
     package_data={'afaligner': ['templates/*']},
     install_requires=[
-        'aeneas==1.7.3.0', 'Jinja2==2.11.1',
+        'aeneas==1.7.3.0',
+        'Jinja2==2.11.1',
     ],
     ext_modules=[CTypes(
         'afaligner.c_modules.dtwbd',
