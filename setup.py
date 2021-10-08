@@ -55,13 +55,14 @@ setup(
     ],
     keywords=['forced-alignment'],
     packages=['afaligner'],
+    package_dir={'': 'src'},
     package_data={'afaligner': ['templates/*']},
     install_requires=[
         'aeneas==1.7.3.0', 'Jinja2==2.11.1',
     ],
     ext_modules=[CTypes(
         'afaligner.c_modules.dtwbd',
-        sources=['afaligner/c_modules/dtwbd.c']
+        sources=['src/afaligner/c_modules/dtwbd.c']
     )],
     cmdclass={'build_ext': build_ext}
 )
