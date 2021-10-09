@@ -1,13 +1,14 @@
-import os.path
+import os
 
-from setuptools import setup, Extension
-from distutils.command.build_ext import build_ext as _build_ext
+from setuptools import setup
+from setuptools.extension import Library
+from setuptools.command.build_ext import build_ext as _build_ext
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
-class CTypes(Extension): pass
+class CTypesLibrary(Library): pass
 
 
 class build_ext(_build_ext):
@@ -17,17 +18,14 @@ class build_ext(_build_ext):
     See https://stackoverflow.com/questions/4529555/building-a-ctypes-based-c-library-with-distutils
     """
     def build_extension(self, ext):
-        self._ctypes = isinstance(ext, CTypes)
+        self._ctypes = isinstance(ext, CTypesLibrary)
         return super().build_extension(ext)
 
-    def get_export_symbols(self, ext):
-        if self._ctypes:
-            return ext.export_symbols
-        return super().get_export_symbols(ext)
-
     def get_ext_filename(self, ext_name):
-        if self._ctypes:
-            return ext_name + '.so'
+        # setuptools' build_ext calls get_ext_filename() once before build_extension():
+        # It's in finalize_options(), and the name doesn't seem to matter.
+        if getattr(self, '_ctypes', False):
+            return os.path.join(*ext_name.split('.')) + '.so'
         return super().get_ext_filename(ext_name)
 
 
@@ -61,7 +59,7 @@ setup(
         'aeneas==1.7.3.0',
         'Jinja2==2.11.1',
     ],
-    ext_modules=[CTypes(
+    ext_modules=[CTypesLibrary(
         'afaligner.c_modules.dtwbd',
         sources=['src/afaligner/c_modules/dtwbd.c']
     )],
