@@ -9,6 +9,9 @@
 
 *.so
 
+/build/
+/dist/
+
 # project specific
 /resources
 /afaligner/__main__.py
