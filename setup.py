@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup
 from setuptools.extension import Library
-from setuptools.command.build_ext import build_ext as _build_ext
+from distutils.command.build_ext import build_ext as _build_ext
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -22,6 +22,7 @@ class build_ext(_build_ext):
         return super().build_extension(ext)
 
     def get_ext_filename(self, ext_name):
+        # If you are going to use setuptools' build_ext:
         # setuptools' build_ext calls get_ext_filename() once before build_extension():
         # It's in finalize_options(), and the name doesn't seem to matter.
         if getattr(self, '_ctypes', False):
@@ -35,7 +36,7 @@ with open(os.path.join(BASE_DIR, 'README.md'), 'r') as f:
 
 setup(
     name='afaligner',
-    version='0.1.7',
+    version='0.1.8',
     url='https://github.com/r4victor/afaligner',
     author='Victor Skvortsov',
     author_email='vds003@gmail.com',
