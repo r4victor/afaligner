@@ -36,7 +36,7 @@ with open(os.path.join(BASE_DIR, 'README.md'), 'r') as f:
 
 setup(
     name='afaligner',
-    version='0.1.8',
+    version='0.1.9',
     url='https://github.com/r4victor/afaligner',
     author='Victor Skvortsov',
     author_email='vds003@gmail.com',
@@ -57,8 +57,8 @@ setup(
     package_dir={'': 'src'},
     package_data={'afaligner': ['templates/*']},
     install_requires=[
-        'aeneas==1.7.3.0',
-        'Jinja2==2.11.3',
+        'aeneas>=1.7.3.0',
+        'Jinja2>=3.1.2',
     ],
     ext_modules=[CTypesLibrary(
         'afaligner.c_modules.dtwbd',
