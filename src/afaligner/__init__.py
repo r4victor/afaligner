@@ -23,7 +23,7 @@ def align(
     text_dir, audio_dir, output_dir=None, output_format='smil',
     sync_map_text_path_prefix='', sync_map_audio_path_prefix='',
     skip_penalty=None, radius=None,
-    times_as_timedelta=False,
+    times_as_timedelta=False, language=Language.ENG
 ):
     """
     This function performs an automatic synchronization of text and audio.
@@ -54,6 +54,8 @@ def align(
     `times_as_timedelta` – if True, returned times are datetime.timedelta() instances.
     If False, the times are strings of the format
     f'{hours:d}:{minutes:0>2d}:{seconds:0>2d}.{ms:0>3d}'
+    
+    `language` - language of the text. One of aenas.language.Language. Defaults to `Language.ENG`
 
     Output:
 
@@ -164,7 +166,7 @@ def build_sync_map(
             text_name = get_name_from_path(text_path)
             output_text_name = os.path.join(sync_map_text_path_prefix, text_name)
             textfile = TextFile(text_path, file_format=TextFileFormat.UNPARSED, parameters=parse_parameters)
-            textfile.set_language(Language.ENG)
+            textfile.set_language(language)
             text_wav_path = os.path.join(tmp_dir, f'{drop_extension(text_name)}_text.wav')
             sync_map[output_text_name] = {}
 
