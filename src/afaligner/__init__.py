@@ -192,7 +192,7 @@ def build_sync_map(
             audio_name = get_name_from_path(audio_path)
             output_audio_name = os.path.join(sync_map_audio_path_prefix, audio_name)
             audio_wav_path = os.path.join(tmp_dir, f'{drop_extension(audio_name)}_audio.wav')
-            subprocess.run(['ffmpeg', '-n', '-i', audio_path, audio_wav_path])
+            subprocess.run(['ffmpeg', '-n', '-i', audio_path, '-rf64', 'auto', audio_wav_path])
 
             audio_mfcc_sequence = np.ascontiguousarray(
                 AudioFileMFCC(audio_wav_path).all_mfcc.T[:, 1:]
