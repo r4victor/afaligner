@@ -2,7 +2,7 @@
 
 ## Overview
 
-<b>afaligner</b> is a Python library for automatic text and audio synchronization (a.k.a forced aligner). You give it a list of text files and a list of audio files that contain the narrated text, and it produces a mapping between text fragments and the corresponding audio fragments.
+<b>afaligner</b> is a Python library for automatic text and audio synchronization (a.k.a. forced aligner). You give it a list of text files and a list of audio files that contain the narrated text, and it produces a mapping between text fragments and the corresponding audio fragments.
 
 
 <b>afaligner</b> is used in the [syncabook](https://github.com/r4victor/syncabook) command-line tool to produce EPUB3 with Media Overlays ebooks and has been developed for this specific purpose. If you want to create an ebook with synchronized text and audio, consider using [syncabook](https://github.com/r4victor/syncabook) instead of using <b>afaligner</b> directly.
@@ -15,7 +15,7 @@
 
 * It can, with varying success, align differently split text and audio. 
 
-<b>afaligner</b> was inspired by [aeneas](https://github.com/readbeyond/aeneas) and works in a similiar way. It uses <b>aeneas</b> as a dependency for text synthesis and MFCC extraction.
+<b>afaligner</b> was inspired by [aeneas](https://github.com/readbeyond/aeneas) and works in a similar way. It uses <b>aeneas</b> as a dependency for text synthesis and MFCC extraction.
 
 ## Supported platforms
 
