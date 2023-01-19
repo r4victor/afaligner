@@ -23,7 +23,7 @@ def align(
     text_dir, audio_dir, output_dir=None, output_format='smil',
     sync_map_text_path_prefix='', sync_map_audio_path_prefix='',
     skip_penalty=None, radius=None,
-    times_as_timedelta=False, language=Language.ENG
+    times_as_timedelta=False, language=Language.ENG,
 ):
     """
     This function performs an automatic synchronization of text and audio.
@@ -95,7 +95,8 @@ def align(
         sync_map_audio_path_prefix=sync_map_audio_path_prefix,
         skip_penalty=skip_penalty,
         radius=radius,
-        times_as_timedelta=times_as_timedelta
+        times_as_timedelta=times_as_timedelta,
+        language=language,
     )
 
     if output_dir is not None:
@@ -113,7 +114,8 @@ def build_sync_map(
     text_paths, audio_paths, tmp_dir,
     sync_map_text_path_prefix, sync_map_audio_path_prefix,
     skip_penalty, radius,
-    times_as_timedelta
+    times_as_timedelta,
+    language,
 ):
     """
     This is an algorithm for building a sync map.
