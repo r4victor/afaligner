@@ -86,8 +86,8 @@ def align(
 
     os.makedirs(tmp_dir, exist_ok=True)
     
-    text_paths = (os.path.join(text_dir, f) for f in sorted(os.listdir(text_dir)))
-    audio_paths = (os.path.join(audio_dir, f) for f in sorted(os.listdir(audio_dir)))
+    text_paths = (os.path.join(text_dir, f) for f in sorted(os.listdir(text_dir)) if not f.startswith('.'))
+    audio_paths = (os.path.join(audio_dir, f) for f in sorted(os.listdir(audio_dir)) if not f.startswith('.'))
 
     sync_map = build_sync_map(
         text_paths, audio_paths, tmp_dir,
