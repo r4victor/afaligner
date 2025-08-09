@@ -30,13 +30,13 @@
 
 ## Installation
 
-1. Install [Python](https://www.python.org/) (>= 3.6)
+1. Install [Python](https://www.python.org/) (>= 3.6, <=3.10)
 
 2. Install [FFmpeg](https://www.ffmpeg.org/) and [eSpeak](http://espeak.sourceforge.net/)
 
 3. Install <b>numpy</b>:
    ```
-   pip install numpy
+   pip install numpy==1.23.4
    ```
 
 4. Install <b>afaligner</b>:
@@ -142,8 +142,8 @@ For more details, please refer to docstrings.
 
 ## Troubleshooting
 
-`pip install afaligner` may not work on macOS if it tries to compile a [universal library](https://developer.apple.com/documentation/apple-silicon/building-a-universal-macos-binary). This seems to be because `aeneas` complies only on x86_64. I got an error when using Python 3.9. The following command fixes it:
+* `pip install afaligner` may not work on macOS if it tries to compile a [universal library](https://developer.apple.com/documentation/apple-silicon/building-a-universal-macos-binary). This seems to be because `aeneas` complies only on x86_64. I got an error when using Python 3.9. The following command fixes it:
 
-```
-ARCHFLAGS="-arch x86_64" pip install afaligner
-```
+   ```
+   ARCHFLAGS="-arch x86_64" pip install afaligner
+   ```
